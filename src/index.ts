@@ -23,7 +23,7 @@ app.post("/password/login", async ({ body, jwt }) => {
     data: {
       accessToken: jwtStr,
       refreshToken: jwtStr,
-      expiresIn: 3600,
+      expiresIn: 10,
     },
   };
 });
@@ -31,11 +31,20 @@ app.post("/password/login", async ({ body, jwt }) => {
 app.get("/user", async ({ jwt, headers }) => {
   try {
     const jwtStr = headers.authorization?.split(" ")[1];
+    console.log(jwtStr)
     const userInfo = (await jwt.verify(jwtStr)) as { username: string };
-    return {
-      userId: "fake_user_id",
-      username: userInfo.username,
-    };
+    if (userInfo) {
+      return {
+        userId: "fake_user_id",
+        username: userInfo.username,
+      };
+    } else {
+      return {
+        code: 1,
+        message: "错误的token",
+        data: null,
+      };
+    }
   } catch (e) {
     return {
       code: 1,
