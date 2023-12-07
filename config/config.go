@@ -7,7 +7,8 @@ import (
 )
 
 type JwtConfig struct {
-	Secret string
+	Secret    string
+	ExpiresIn int64
 }
 
 type MysqlConfig struct {
@@ -21,6 +22,7 @@ type MysqlConfig struct {
 type config struct {
 	Jwt   JwtConfig
 	Mysql MysqlConfig
+	Salt  string
 }
 
 var _config config
@@ -40,6 +42,14 @@ func LoadConfig(path string) {
 
 func GetJwtSecret() string {
 	return _config.Jwt.Secret
+}
+
+func GetJwtExpiresIn() int64 {
+	return _config.Jwt.ExpiresIn
+}
+
+func GetSalt() string {
+	return _config.Salt
 }
 
 func GetMysqlConfig() MysqlConfig {
