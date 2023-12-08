@@ -1,5 +1,7 @@
 jwt:
   secret: "qwerty"
+  expiresIn: 6 # 5 minutes
+salt: "hjxz"
 mysql:
   username: "root"
   password: "123456"

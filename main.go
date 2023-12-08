@@ -15,5 +15,6 @@ func init() {
 func main() {
 	r := server.SetupServer()
 	handler.HandleUser(r)
+	handler.HandleUpms(r)
 	r.Run(":3000")
 }

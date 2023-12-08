@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/vinoMamba/lazy-doc-end/config"
+	"github.com/vinoMamba.com/pharos-admin-end/config"
 )
 
 func TestMain(m *testing.M) {

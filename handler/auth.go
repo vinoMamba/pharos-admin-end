@@ -69,7 +69,7 @@ func handlePwdLogin(c *gin.Context) {
 		return
 	}
 
-	token, err := utils.CreateJwt(u.ID, u.Username)
+	token, err := utils.CreateJwt(u.UserId, u.Username)
 	if err != nil {
 		log.WithError(err).Errorln("密码错误")
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
@@ -105,7 +105,7 @@ func handleRefresh(c *gin.Context) {
 		return
 	}
 
-	token, err := utils.CreateJwt(u.ID, u.Username)
+	token, err := utils.CreateJwt(u.UserId, u.Username)
 	if err != nil {
 		log.WithError(err).Errorln("创建token失败")
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{

@@ -6,17 +6,17 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/vinoMamba/lazy-doc-end/config"
+	"github.com/vinoMamba.com/pharos-admin-end/config"
 )
 
 func CreateJwt(userId int64, username string) (string, error) {
 	iat := time.Now()
-	exp := iat.Add(time.Hour * time.Duration(config.GetJwtExpiresIn()))
+	exp := iat.Add(time.Minute * time.Duration(config.GetJwtExpiresIn()))
 	jwtKey := []byte(config.GetJwtSecret())
 
 	t := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user": map[string]string{
-			"id":       strconv.FormatInt(userId, 10),
+			"userId":   strconv.FormatInt(userId, 10),
 			"username": username,
 		},
 		"iat": iat.Unix(),
@@ -47,7 +47,7 @@ func GetCurrentUsername(c *gin.Context) string {
 
 func GetCurrentUserId(c *gin.Context) int {
 	mapClaims := c.MustGet("cliams").(*jwt.MapClaims)
-	idStr := (*mapClaims)["user"].(map[string]interface{})["id"].(string)
+	idStr := (*mapClaims)["user"].(map[string]interface{})["userId"].(string)
 	id, _ := strconv.ParseInt(idStr, 10, 64)
 	return int(id)
 }
