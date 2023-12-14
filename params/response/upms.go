@@ -27,7 +27,7 @@ type RouterResponse struct {
 }
 
 type MenuListResponse struct {
-	MenuId     int64     `json:"menuId"`
+	MenuId     string    `json:"menuId"`
 	MenuName   string    `json:"menuName"`
 	ParentId   string    `json:"parentId"`
 	Icon       string    `json:"icon"`

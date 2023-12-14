@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/cast"
 	"github.com/vinoMamba.com/pharos-admin-end/logger"
 	"github.com/vinoMamba.com/pharos-admin-end/middlewares"
 	"github.com/vinoMamba.com/pharos-admin-end/models"
@@ -18,8 +19,9 @@ func HandleUpms(r *gin.Engine) {
 	ug.Use(middlewares.AuthMiddleware).GET("/user/info", handleUserInfo)
 	ug.Use(middlewares.AuthMiddleware).GET("/menu/router", handleRouter)
 	ug.Use(middlewares.AuthMiddleware).GET("/menu/list", handleMenuList)
-	ug.Use(middlewares.AuthMiddleware).GET("/menu/save", handleMenuSave)
-	ug.Use(middlewares.AuthMiddleware).GET("/menu/delete", handleMenuDelete)
+	ug.Use(middlewares.AuthMiddleware).GET("/menu/tree", handleMenuList)
+	ug.Use(middlewares.AuthMiddleware).POST("/menu/save", handleMenuSave)
+	ug.Use(middlewares.AuthMiddleware).DELETE("/menu/delete", handleMenuDelete)
 }
 
 func handleUserInfo(c *gin.Context) {
@@ -102,7 +104,7 @@ func handleMenuList(c *gin.Context) {
 	}
 	for _, v := range list {
 		items = append(items, response.MenuListResponse{
-			MenuId:     v.MenuId,
+			MenuId:     cast.ToString(v.MenuId),
 			MenuName:   v.MenuName,
 			ParentId:   v.ParentId,
 			Icon:       v.Icon,
