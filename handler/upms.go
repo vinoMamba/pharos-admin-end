@@ -19,8 +19,10 @@ func HandleUpms(r *gin.Engine) {
 	ug.Use(middlewares.AuthMiddleware).GET("/user/info", handleUserInfo)
 	ug.Use(middlewares.AuthMiddleware).GET("/menu/router", handleRouter)
 	ug.Use(middlewares.AuthMiddleware).GET("/menu/list", handleMenuList)
+	ug.Use(middlewares.AuthMiddleware).GET("/menu/detail", handleMenuDetail)
 	ug.Use(middlewares.AuthMiddleware).GET("/menu/tree", handleMenuList)
 	ug.Use(middlewares.AuthMiddleware).POST("/menu/save", handleMenuSave)
+	ug.Use(middlewares.AuthMiddleware).PUT("/menu/update", handleMenuUpdate)
 	ug.Use(middlewares.AuthMiddleware).DELETE("/menu/delete", handleMenuDelete)
 }
 
@@ -166,6 +168,50 @@ func handleMenuSave(c *gin.Context) {
 	})
 }
 
+func handleMenuUpdate(c *gin.Context) {
+	log := logger.New(c)
+	var body request.MenuUpdateRequest
+
+	if err := c.ShouldBindJSON(&body); err != nil {
+		log.WithError(err).Errorln("参数错误")
+		c.AbortWithStatusJSON(200, gin.H{
+			"code":    1,
+			"message": "参数错误",
+			"data":    nil,
+		})
+		return
+	}
+	if err := storage.UpdateMenu(c, &models.Menu{
+		MenuId:     cast.ToInt64(body.MenuId),
+		ParentId:   body.ParentId,
+		MenuName:   body.MenuName,
+		RoutePath:  body.RoutePath,
+		RouteName:  body.RouteName,
+		Redirect:   body.Redirect,
+		Component:  body.Component,
+		Permission: body.Permission,
+		Type:       body.Type,
+		Icon:       body.Icon,
+		Sort:       body.Sort,
+		Endpoint:   body.Endpoint,
+		Status:     body.Status,
+		HideMenu:   body.HideMenu,
+	}); err != nil {
+		log.WithError(err).Errorln("更新失败")
+		c.AbortWithStatusJSON(200, gin.H{
+			"code":    1,
+			"message": "更新失败",
+			"data":    nil,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"code":    0,
+		"message": "success",
+		"data":    nil,
+	})
+}
+
 func handleMenuDelete(c *gin.Context) {
 	log := logger.New(c)
 	var body request.MenuDeleteRequest
@@ -180,7 +226,7 @@ func handleMenuDelete(c *gin.Context) {
 		return
 	}
 
-	idList := utils.TransformStringToInt64(body.DeleteMenuIdList)
+	idList := utils.TransformStringToInt64(body.MenuIds)
 	if err := storage.DeleteMenus(c, idList); err != nil {
 		log.WithError(err).Errorln("删除失败")
 		c.AbortWithStatusJSON(200, gin.H{
@@ -195,5 +241,42 @@ func handleMenuDelete(c *gin.Context) {
 		"code":    0,
 		"message": "success",
 		"data":    nil,
+	})
+}
+
+func handleMenuDetail(c *gin.Context) {
+	log := logger.New(c)
+	menuId := c.Query("menuId")
+	log.WithField("menuId", menuId).Infoln("menuId")
+
+	m, err := storage.GetMenuById(c, cast.ToInt64(menuId))
+	if err != nil {
+		log.WithError(err).Errorln("查询失败")
+		c.AbortWithStatusJSON(200, gin.H{
+			"code":    1,
+			"message": "没有该菜单",
+			"data":    nil,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"code":    0,
+		"message": "success",
+		"data": response.MenuDetailResponse{
+			Type:       m.Type,
+			MenuId:     m.MenuId,
+			MenuName:   m.MenuName,
+			ParentId:   m.ParentId,
+			Icon:       m.Icon,
+			Permission: m.Permission,
+			Sort:       m.Sort,
+			RoutePath:  m.RoutePath,
+			RouteName:  m.RouteName,
+			Component:  m.Component,
+			Redirect:   m.Redirect,
+			Affix:      m.Affix,
+			Status:     m.Status,
+			HideMenu:   m.HideMenu,
+		},
 	})
 }

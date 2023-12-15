@@ -19,7 +19,7 @@ func GetRouteList(c context.Context) ([]*models.Menu, error) {
 // GetMenuList 获取菜单列表(用于菜单管理)
 func GetMenuList(c context.Context) ([]*models.Menu, error) {
 	var menuList []*models.Menu
-	err := DB.WithContext(c).Model(models.Menu{}).Find(&menuList).Error
+	err := DB.WithContext(c).Model(models.Menu{}).Where("is_deleted", 0).Find(&menuList).Error
 	if err != nil {
 		return nil, err
 	}
@@ -35,12 +35,27 @@ func SaveMenu(c context.Context, menu *models.Menu) error {
 	return nil
 }
 
+// updateMenu 更新菜单
+func UpdateMenu(c context.Context, menu *models.Menu) error {
+	return DB.WithContext(c).Where("id = ?", menu.MenuId).Updates(menu).Error
+}
+
 //	DeleteMenu 删除菜单
 
 func DeleteMenus(c context.Context, idList []int64) error {
-	err := DB.WithContext(c).Model(models.Menu{}).Where("id in ?", idList).Update("status", 1).Error
+	err := DB.WithContext(c).Model(models.Menu{}).Where("id IN ?", idList).Update("is_deleted", 1).Error
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+// GetMenuById 根据ID获取菜单
+func GetMenuById(c context.Context, id int64) (*models.Menu, error) {
+	var menu models.Menu
+	err := DB.WithContext(c).Model(models.Menu{}).Where("id = ?", id).First(&menu).Error
+	if err != nil {
+		return nil, err
+	}
+	return &menu, nil
 }

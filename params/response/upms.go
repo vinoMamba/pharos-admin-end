@@ -37,3 +37,20 @@ type MenuListResponse struct {
 	Status     int       `json:"status"`
 	CreateTime time.Time `json:"createTime"`
 }
+
+type MenuDetailResponse struct {
+	Type       int    `json:"type"`
+	MenuId     int64  `json:"menuId"`
+	MenuName   string `json:"menuName"`
+	ParentId   string `json:"parentId"`
+	Icon       string `json:"icon"`
+	Permission string `json:"permission"`
+	Sort       int    `json:"sort"`
+	RoutePath  string `json:"routePath"`
+	RouteName  string `json:"routeName"`
+	Component  string `json:"component"`
+	Redirect   string `json:"redirect"`
+	Affix      int    `json:"affix"`
+	Status     int    `json:"status"`
+	HideMenu   int    `json:"hideMenu"`
+}
