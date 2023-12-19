@@ -71,3 +71,17 @@ type RoleDetailResponse struct {
 	Status   int      `json:"status"`
 	MenuIds  []string `json:"menuIds"`
 }
+
+type UserListResponse struct {
+	UserId      string `json:"userId"`
+	Avatar      string `json:"avatar"`
+	RealName    string `json:"realName"`
+	Username    string `json:"username"`
+	JobNumber   string `json:"jobNumber"`
+	Mobile      string `json:"mobile"`
+	Email       string `json:"email"`
+	HireDate    string `json:"hireDate"`
+	LeaveStatus int    `json:"leaveStatus"`
+	LeaveTime   string `json:"leaveTime"`
+	AdminStatus int    `json:"adminStatus"`
+}

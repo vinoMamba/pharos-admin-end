@@ -1,5 +1,7 @@
 package request
 
+import "time"
+
 type MenuSaveRequest struct {
 	ParentId   string `json:"parentId"`
 	MenuName   string `json:"menuName"`
@@ -60,4 +62,21 @@ type RoleUpdateRequest struct {
 
 type RoleDeleteRequest struct {
 	RoleIds []string `json:"roleIds"`
+}
+
+type UserCreateRequest struct {
+	Username    string    `json:"username"`
+	Password    string    `json:"password"`
+	RealName    string    `json:"realName"`
+	JobNumber   string    `json:"jobNumber"`
+	Mobile      string    `json:"mobile"`
+	Email       string    `json:"email"`
+	Avatar      string    `json:"avatar"`
+	HireDate    string    `json:"hireDate"`
+	LeaveStatus int       `json:"leaveStatus"`
+	LeaveTime   time.Time `json:"leaveTime"`
+	AdminStatus int       `json:"adminStatus"`
+	DeptIds     []string  `json:"deptIds"`
+	RoleIds     []string  `json:"roleIds"`
+	Remark      string    `json:"remark"`
 }
