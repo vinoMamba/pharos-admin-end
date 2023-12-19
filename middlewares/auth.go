@@ -24,7 +24,6 @@ func AuthMiddleware(c *gin.Context) {
 		c.Abort()
 		return
 	}
-	log.Infof("cliams: %v", utils.Marshal(cliams))
 	c.Set("cliams", cliams)
 	c.Next()
 }

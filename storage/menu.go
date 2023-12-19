@@ -9,7 +9,7 @@ import (
 // GetRouteList 获取路由列表
 func GetRouteList(c context.Context) ([]*models.Menu, error) {
 	var menuList []*models.Menu
-	err := DB.WithContext(c).Model(models.Menu{}).Where("status = ?", 0).Find(&menuList).Error
+	err := DB.WithContext(c).Model(models.Menu{}).Where("status = ?", 0).Where("type != ?", 3).Find(&menuList).Error
 	if err != nil {
 		return nil, err
 	}
@@ -58,4 +58,14 @@ func GetMenuById(c context.Context, id int64) (*models.Menu, error) {
 		return nil, err
 	}
 	return &menu, nil
+}
+
+// 获取permission code
+func GetPermCode(c context.Context) ([]string, error) {
+	perCodeList := make([]string, 0)
+	err := DB.WithContext(c).Model(models.Menu{}).Select("permission").Where("permission != ''").Find(&perCodeList).Error
+	if err != nil {
+		return nil, err
+	}
+	return perCodeList, nil
 }

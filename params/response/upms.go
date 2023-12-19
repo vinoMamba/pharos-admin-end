@@ -11,7 +11,7 @@ type UserInfoResponse struct {
 }
 
 type RouterResponse struct {
-	MenuId           int64  `json:"menuId"`
+	MenuId           string `json:"menuId"`
 	MenuName         string `json:"menuName"`
 	ParentId         string `json:"parentId"`
 	RoutePath        string `json:"routePath"`
@@ -53,4 +53,21 @@ type MenuDetailResponse struct {
 	Affix      int    `json:"affix"`
 	Status     int    `json:"status"`
 	HideMenu   int    `json:"hideMenu"`
+}
+
+type RoleListResponse struct {
+	RoleId   string `json:"roleId"`
+	RoleName string `json:"roleName"`
+	RoleCode string `json:"roleCode"`
+	Remark   string `json:"remark"`
+	Status   int    `json:"status"`
+}
+
+type RoleDetailResponse struct {
+	RoleId   string   `json:"roleId"`
+	RoleName string   `json:"roleName"`
+	RoleCode string   `json:"roleCode"`
+	Remark   string   `json:"remark"`
+	Status   int      `json:"status"`
+	MenuIds  []string `json:"menuIds"`
 }

@@ -40,3 +40,24 @@ type MenuDeleteRequest struct {
 type MenuDetailRequest struct {
 	MenuId string `json:"menuId"`
 }
+
+type RoleCreateRequest struct {
+	RoleName string   `json:"roleName"`
+	RoleCode string   `json:"roleCode"`
+	Remark   string   `json:"remark"`
+	Status   int      `json:"status"`
+	MenuIds  []string `json:"menuIds"`
+}
+
+type RoleUpdateRequest struct {
+	RoleId   string   `json:"roleId"`
+	RoleName string   `json:"roleName"`
+	RoleCode string   `json:"roleCode"`
+	Remark   string   `json:"remark"`
+	Status   int      `json:"status"`
+	MenuIds  []string `json:"menuIds"`
+}
+
+type RoleDeleteRequest struct {
+	RoleIds []string `json:"roleIds"`
+}

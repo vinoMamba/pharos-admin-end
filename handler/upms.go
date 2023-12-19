@@ -21,9 +21,17 @@ func HandleUpms(r *gin.Engine) {
 	ug.Use(middlewares.AuthMiddleware).GET("/menu/list", handleMenuList)
 	ug.Use(middlewares.AuthMiddleware).GET("/menu/detail", handleMenuDetail)
 	ug.Use(middlewares.AuthMiddleware).GET("/menu/tree", handleMenuList)
+	ug.Use(middlewares.AuthMiddleware).GET("/getPermCode", handlePerCode)
 	ug.Use(middlewares.AuthMiddleware).POST("/menu/save", handleMenuSave)
 	ug.Use(middlewares.AuthMiddleware).PUT("/menu/update", handleMenuUpdate)
 	ug.Use(middlewares.AuthMiddleware).DELETE("/menu/delete", handleMenuDelete)
+
+	ug.Use(middlewares.AuthMiddleware).GET("/role/page_list", handleRolePageList)
+	ug.Use(middlewares.AuthMiddleware).GET("/role/all_list", handleRoleAllList)
+	ug.Use(middlewares.AuthMiddleware).POST("/role/save", handleRoleSave)
+	ug.Use(middlewares.AuthMiddleware).PUT("/role/update", handleRoleUpdate)
+	ug.Use(middlewares.AuthMiddleware).DELETE("/role/delete", handleRoleDelete)
+	ug.Use(middlewares.AuthMiddleware).GET("/role/detail", handleRoleDetail)
 }
 
 func handleUserInfo(c *gin.Context) {
@@ -69,7 +77,7 @@ func handleRouter(c *gin.Context) {
 
 	for _, v := range list {
 		items = append(items, response.RouterResponse{
-			MenuId:           v.MenuId,
+			MenuId:           cast.ToString(v.MenuId),
 			MenuName:         v.MenuName,
 			ParentId:         v.ParentId,
 			RoutePath:        v.RoutePath,
@@ -277,6 +285,284 @@ func handleMenuDetail(c *gin.Context) {
 			Affix:      m.Affix,
 			Status:     m.Status,
 			HideMenu:   m.HideMenu,
+		},
+	})
+}
+
+func handlePerCode(c *gin.Context) {
+	log := logger.New(c)
+	list, err := storage.GetPermCode(c)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    1,
+			"message": "Server Error",
+			"data":    nil,
+		})
+		return
+	}
+
+	log.WithField("list", list).Infoln("list")
+	c.JSON(http.StatusOK, gin.H{
+		"code":    0,
+		"message": "success",
+		"data":    list,
+	})
+}
+
+func handleRolePageList(c *gin.Context) {
+	log := logger.New(c)
+	pageSize := c.Query("pageSize")
+	pageNum := c.Query("pageNum")
+	log.WithField("pageSize", pageSize).WithField("pageNum", pageNum).Infoln("pageSize, pageNum")
+	roleList, total, err := storage.GetRoleListByPage(c, cast.ToInt(pageNum), cast.ToInt(pageSize))
+	if err != nil {
+		log.WithError(err).Errorln("查询失败")
+		c.AbortWithStatusJSON(200, gin.H{
+			"code":    1,
+			"message": "Server Error",
+			"data":    nil,
+		})
+		return
+	}
+	var items []response.RoleListResponse
+	for _, v := range roleList {
+		items = append(items, response.RoleListResponse{
+			RoleId:   cast.ToString(v.RoleId),
+			RoleName: v.RoleName,
+			RoleCode: v.RoleCode,
+			Remark:   v.Remark,
+			Status:   v.Status,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code":    0,
+		"message": "success",
+		"data": gin.H{
+			"items":    items,
+			"pageSize": pageSize,
+			"pageNum":  pageNum,
+			"total":    total,
+		},
+	})
+}
+
+func handleRoleAllList(c *gin.Context) {
+	log := logger.New(c)
+	roleList, err := storage.GetAllRoleList(c)
+	if err != nil {
+		log.WithError(err).Errorln("查询失败")
+		c.AbortWithStatusJSON(200, gin.H{
+			"code":    1,
+			"message": "Server Error",
+			"data":    nil,
+		})
+		return
+	}
+	var list []response.RoleListResponse
+	for _, v := range roleList {
+		list = append(list, response.RoleListResponse{
+			RoleId:   cast.ToString(v.RoleId),
+			RoleName: v.RoleName,
+			RoleCode: v.RoleCode,
+			Remark:   v.Remark,
+			Status:   v.Status,
+		})
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"code":    0,
+		"message": "success",
+		"data":    list,
+	})
+}
+
+func handleRoleSave(c *gin.Context) {
+	log := logger.New(c)
+	var body request.RoleCreateRequest
+	if err := c.ShouldBindJSON(&body); err != nil {
+		log.WithError(err).Errorln("参数错误")
+		c.AbortWithStatusJSON(200, gin.H{
+			"code":    1,
+			"message": "参数错误",
+			"data":    nil,
+		})
+		return
+	}
+	roleId := utils.GetSnowflakeIdInt64()
+	role := &models.Role{
+		RoleId:   roleId,
+		RoleName: body.RoleName,
+		RoleCode: body.RoleCode,
+		Remark:   body.Remark,
+		Status:   body.Status,
+	}
+	if err := storage.AddRole(c, role); err != nil {
+		log.WithError(err).Errorln("添加失败")
+		c.AbortWithStatusJSON(200, gin.H{
+			"code":    1,
+			"message": "添加失败",
+			"data":    nil,
+		})
+		return
+	}
+	if err := storage.CreateRoleMenus(c, roleId, body.MenuIds); err != nil {
+		log.WithError(err).Errorln("添加失败")
+		c.AbortWithStatusJSON(200, gin.H{
+			"code":    1,
+			"message": "添加失败",
+			"data":    nil,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"code":    0,
+		"message": "添加成功",
+		"data":    nil,
+	})
+}
+
+func handleRoleUpdate(c *gin.Context) {
+	log := logger.New(c)
+	var body request.RoleUpdateRequest
+	if err := c.ShouldBindJSON(&body); err != nil {
+		log.WithError(err).Errorln("参数错误")
+		c.AbortWithStatusJSON(200, gin.H{
+			"code":    1,
+			"message": "参数错误",
+			"data":    nil,
+		})
+		return
+	}
+	log.WithField("body", utils.Marshal(body)).Infoln("body")
+
+	role, err := storage.GetRoleById(c, cast.ToInt64(body.RoleId))
+	if err != nil {
+		log.WithError(err).Errorln("没有该角色")
+		c.AbortWithStatusJSON(200, gin.H{
+			"code":    1,
+			"message": "没有该角色",
+			"data":    nil,
+		})
+		return
+	}
+	role.RoleName = body.RoleName
+	role.RoleCode = body.RoleCode
+	role.Remark = body.Remark
+	role.Status = body.Status
+
+	log.WithField("role", utils.Marshal(role)).Infoln("body")
+
+	if err := storage.UpdateRole(c, role); err != nil {
+		log.WithError(err).Errorln("更新失败")
+		c.AbortWithStatusJSON(200, gin.H{
+			"code":    1,
+			"message": "更新失败",
+			"data":    nil,
+		})
+		return
+	}
+	var roleIds []int64
+	roleIds = append(roleIds, cast.ToInt64(body.RoleId))
+	if err := storage.DeleteRoleMenuByRoleId(c, roleIds); err != nil {
+		log.WithError(err).Errorln("更新失败")
+		c.AbortWithStatusJSON(200, gin.H{
+			"code":    1,
+			"message": "更新失败",
+			"data":    nil,
+		})
+		return
+	}
+
+	if err := storage.CreateRoleMenus(c, cast.ToInt64(body.RoleId), body.MenuIds); err != nil {
+		log.WithError(err).Errorln("更新失败")
+		c.AbortWithStatusJSON(200, gin.H{
+			"code":    1,
+			"message": "更新失败",
+			"data":    nil,
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code":    0,
+		"message": "更新成功",
+		"data":    nil,
+	})
+}
+func handleRoleDelete(c *gin.Context) {
+	log := logger.New(c)
+	var body request.RoleDeleteRequest
+	if err := c.ShouldBindJSON(&body); err != nil {
+		log.WithError(err).Errorln("参数错误")
+		c.AbortWithStatusJSON(200, gin.H{
+			"code":    1,
+			"message": "参数错误",
+			"data":    nil,
+		})
+		return
+	}
+	roleIds := utils.TransformStringToInt64(body.RoleIds)
+	if err := storage.DeleteRole(c, roleIds); err != nil {
+		log.WithError(err).Errorln("删除失败")
+		c.AbortWithStatusJSON(200, gin.H{
+			"code":    1,
+			"message": "删除失败",
+			"data":    nil,
+		})
+		return
+	}
+	if err := storage.DeleteRoleMenuByRoleId(c, roleIds); err != nil {
+		log.WithError(err).Errorln("删除失败")
+		c.AbortWithStatusJSON(200, gin.H{
+			"code":    1,
+			"message": "删除失败",
+			"data":    nil,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"code":    0,
+		"message": "删除成功",
+		"data":    nil,
+	})
+}
+func handleRoleDetail(c *gin.Context) {
+	log := logger.New(c)
+	roleId := c.Query("roleId")
+	role, err := storage.GetRoleDetail(c, cast.ToInt64(roleId))
+	if err != nil {
+		log.WithError(err).Errorln("查询失败")
+		c.AbortWithStatusJSON(200, gin.H{
+			"code":    1,
+			"message": "没有该角色",
+			"data":    nil,
+		})
+		return
+	}
+	menuList, err := storage.GetMenuIdsByRoleId(c, cast.ToInt64(roleId))
+	if err != nil {
+		log.WithError(err).Errorln("查询失败")
+		c.AbortWithStatusJSON(200, gin.H{
+			"code":    1,
+			"message": "没有该角色",
+			"data":    nil,
+		})
+		return
+	}
+	var menuIds []string
+	for _, v := range menuList {
+		menuIds = append(menuIds, cast.ToString(v))
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"code":    0,
+		"message": "success",
+		"data": response.RoleDetailResponse{
+			RoleId:   cast.ToString(role.RoleId),
+			RoleName: role.RoleName,
+			RoleCode: role.RoleCode,
+			Remark:   role.Remark,
+			Status:   role.Status,
+			MenuIds:  menuIds,
 		},
 	})
 }
